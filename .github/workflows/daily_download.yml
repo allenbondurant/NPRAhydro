@@ -1,0 +1,36 @@
+name: Daily HADS Download
+
+on:
+  schedule:
+    - cron: '0 14 * * *'   # runs daily at 14:00 UTC (6:00 AM Alaska time)
+  workflow_dispatch:         # allows you to trigger it manually from GitHub
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write        # allows the workflow to commit files back to the repo
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run HADS downloader
+        run: python hads_updater.py --output-dir hydromet_data
+
+      - name: Commit and push updated CSVs
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add hydromet_data/
+          git diff --cached --quiet || git commit -m "data: daily HADS update $(date -u '+%Y-%m-%d')"
+          git push
