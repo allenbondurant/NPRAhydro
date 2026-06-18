@@ -2,7 +2,7 @@ name: Daily HADS Download
 
 on:
   schedule:
-    - cron: '0 14 * * *'   # runs daily at 14:00 UTC (6:00 AM Alaska time)
+    - cron: '0 * * * *'   # runs every hour
   workflow_dispatch:         # allows you to trigger it manually from GitHub
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
         run: pip install requests
 
       - name: Run HADS downloader
-        run: python hads_updater.py --output-dir hydromet_data
+        run: python hads_updater.py --output-dir hydromet_data --days 1
 
       - name: Commit and push updated CSVs
         run: |
