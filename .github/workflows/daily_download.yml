@@ -2,7 +2,7 @@ name: Daily HADS Download
 
 on:
   schedule:
-    - cron: '0 * * * *'   # runs every hour
+    - cron: '37 * * * *'   # runs every hour
   workflow_dispatch:         # allows you to trigger it manually from GitHub
 
 jobs:
