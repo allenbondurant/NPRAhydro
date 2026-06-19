@@ -1,16 +1,16 @@
-name: Daily HADS Download
+name: HADS Data Sync
 
 on:
   schedule:
-    - cron: '37 * * * *'   # runs every hour
-  workflow_dispatch:         # allows you to trigger it manually from GitHub
+    - cron: '37 */6 * * *'   # every 6 hours, at :37 past (off-peak for reliability)
+  workflow_dispatch:           # allows manual runs from the Actions tab
 
 jobs:
   download:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write        # allows the workflow to commit files back to the repo
+      contents: write          # allows the workflow to commit files back to the repo
 
     steps:
       - name: Check out repo
@@ -24,13 +24,17 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Run HADS downloader
-        run: python hads_updater.py --output-dir hydromet_data --days 2
+      # Pull the last 5 days every run. The deduplication means overlap is free,
+      # so even if several scheduled runs are skipped, no data is ever lost as
+      # long as a run succeeds within the lookback window.
+      - name: Run downloader
+        run: python hads_updater.py --output-dir hydromet_data --days 5
 
       - name: Commit and push updated CSVs
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add hydromet_data/
-          git diff --cached --quiet || git commit -m "data: daily HADS update $(date -u '+%Y-%m-%d')"
+          git diff --cached --quiet || git commit -m "data: HADS sync $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git pull --rebase --autostash
           git push
